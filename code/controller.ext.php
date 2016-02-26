@@ -253,6 +253,16 @@ class module_controller {
                 $zdbh->bindQuery($sql, $bindArray);
                 $rows = $zdbh->returnRows(); 
 
+		// ship emails as well
+		$sql = "SELECT mb_id_pk FROM x_mailboxes WHERE mb_acc_fk=".$domain_info['vh_acc_fk']." 
+							AND mb_address_vc LIKE '%@:vh_name%'";
+                $bindArray = array(':vh_name' => $domain_info['vh_name_vc']);                                        
+                $zdbh->bindQuery($sql, $bindArray);
+                $emails_rows = $zdbh->returnRows(); 
+
+		die(var_dump($emails_rows));
+		exit;
+
                 $sub_domains = array();
                 if (count($rows) > 0) {					
                     foreach($rows as $row_idx=>$row_sub_domain) {
@@ -278,14 +288,8 @@ class module_controller {
 					
 					//move log files
                     $current_log_path = fs_director::ConvertSlashes($current_log_path);
-                    /*if(!fs_director::CheckFolderExists($current_log_path)){
-                        fs_director::CreateDirectory($current_log_path);
-                    }*/
 
                     $new_log_path = fs_director::ConvertSlashes($new_log_path);
-                    /*if(!fs_director::CheckFolderExists($new_log_path)){
-                        fs_director::CreateDirectory($new_log_path);
-                    }*/
 
                     if(fs_director::CheckFolderExists($current_log_path) && fs_director::CheckFolderExists($new_log_path)){
                         //access log
