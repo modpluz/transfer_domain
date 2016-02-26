@@ -1,0 +1,66 @@
+<@ Init @>
+<div class="zmodule_content panel" id="zmodule_header_<@ ModuleName @>">
+    <div class="panel-heading">
+        <img src="<@ ModuleIcon @>" width="35" height="35" border="0" alt="<@ ModuleName @>">
+
+        <div class="zmodule_title">
+            <@ ModuleName @>
+        </div>
+
+        <div class="zmodule_desc" id="zmodule_desc_<@ ModuleName @>"><@ ModuleDesc @></div>
+
+    </div>
+
+    <@ Result @>
+
+    
+    <div class="zform_wrapper">
+        <h2><: Current domains :></h2>
+        <div id="transfer_domain_msg" class="alert alert-danger" style="display: none;"></div>
+        <% if DomainList %>
+        <form action="./?module=transfer_domain&action=TransferDomain" method="post" id="frm_transfer_domain">
+    	<table class="table table-striped">
+            <tr>
+				<th nowrap="nowrap"><: Domain :>:</th>
+				<td>
+					<select name="transfer_domain_id" id="transfer_domain_id">
+						<option value="0"> -- select -- </option>
+					<% loop DomainList %>
+				    	<option value="<& id &>"><& name &></option>
+				    <% endloop %>
+					</select>
+				</td>
+            </tr>			
+            <tr>
+				<th nowrap="nowrap"><: User :>:</th>
+				<td>
+					<select name="transfer_uid" id="transfer_uid">
+						<option value="0"> -- select -- </option>
+					<% loop ClientList %>
+				    	<option value="<& client_id &>"><& client_name &></option>
+				    <% endloop %>
+					</select>
+				</td>
+            </tr>			
+            <tr>
+				<th></th>
+				<td><button id="btn_transfer_domain" class="btn btn-primary" type="submit" ><: Transfer :></button></td>
+            </tr>			
+	    </table>
+	    <@ CSFR_Tag @>
+    	</form>
+    	<% else %>
+    		<: There are no domains to be transfered. :>
+    	<% endif %>
+    </div>
+</div>
+<script>
+	var form_msgs = [];
+	form_msgs['no_domain'] = "<: Please select a valid domain to transfer! :>";
+	form_msgs['no_uid'] = "<: Please select a valid user to transfer selected domain to! :>";
+	form_msgs['transfer_domain_dialog_title'] = "<: Transfer Domain :>";
+	form_msgs['transfer_domain_confirm_msg'] = "<: Are you sure to transfer selected domain :>?";
+	form_msgs['transfer_domain_ok_btn_label'] = "<: Yes :>";
+	form_msgs['transfer_domain_cancel_btn_label'] = "<: Cancel :>";	
+</script>
+

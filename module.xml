@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<module>
+<name>Transfer Domain</name>
+<version>115</version>
+<defaultcat>Domain Management</defaultcat>
+<type>user</type>
+<desc>This module enables you to transfer one or more domains(and sub domains) from one user account to another within the same Sentora installation.</desc>
+<authorname>Aderemi Adewale (modpluz @ Sentora Forums)</authorname>
+<authoremail>goremmy@gmail.com</authoremail>
+<authorurl>http://www.remmy.me/</authorurl>
+<updateurl>http://zpx.imerlabs.com/zpp/transfer_domain</updateurl>
+</module>
