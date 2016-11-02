@@ -200,23 +200,6 @@ class module_controller {
         return $message;
     }
 
-
-    /*static function doConfirmDomainTransfer() {
-        global $controller;
-        runtime_csfr::Protect();
-        $currentuser = ctrl_users::GetUserDetail();
-        $formvars = $controller->GetAllControllerRequests('FORM');
-        if (!fs_director::CheckForEmptyValue(self::CheckTransferForErrors($formvars['transfer_uid'],$formvars['transfer_domain_id']))) {
-            return false;
-
-        } else {
-            return true;
-        }
-        return;
-    }*/
-
-
-
     static function ExecuteTransferDomain($uid, $domain_id) {
         global $zdbh;
         $retval = false;
@@ -243,31 +226,25 @@ class module_controller {
 			} elseif($domain_info['vh_acc_fk'] == $uid){
 				self::$selfdomaintransfer = true;
 			} else {
-				// domain previous owner id
 			
 				// is there one or more sub domains that belongs to this domain?
-				//$sub_domain_tld = $domain_info['vh_name_vc'];
-				$sql = "SELECT vh_id_pk,vh_directory_vc FROM x_vhosts WHERE vh_acc_fk=".$domain_info['vh_acc_fk']." 
-							AND vh_name_vc LIKE '%:vh_name%' AND vh_type_in=2";
-                $bindArray = array(':vh_name' => $domain_info['vh_name_vc']);                                        
+				$sql = "SELECT vh_id_pk,vh_directory_vc,vh_name_vc,vh_acc_fk FROM x_vhosts WHERE vh_acc_fk=:vh_acc_fk 
+							AND vh_name_vc LIKE '%" . $domain_info['vh_name_vc']. "' AND vh_type_in=2";
+                $bindArray = array(':vh_acc_fk' => $domain_info['vh_acc_fk']);                                        
                 $zdbh->bindQuery($sql, $bindArray);
                 $rows = $zdbh->returnRows(); 
 
 		// ship emails as well
-		$sql = "SELECT mb_id_pk FROM x_mailboxes WHERE mb_acc_fk=".$domain_info['vh_acc_fk']." 
-							AND mb_address_vc LIKE '%@:vh_name%'";
-                $bindArray = array(':vh_name' => $domain_info['vh_name_vc']);                                        
-                $zdbh->bindQuery($sql, $bindArray);
-                $emails_rows = $zdbh->returnRows(); 
-
-		die(var_dump($emails_rows));
-		exit;
+		$sql = "UPDATE x_mailboxes SET mb_acc_fk=:vh_new_acc_fk WHERE mb_acc_fk=:vh_acc_fk AND mb_address_vc LIKE '%" . $domain_info['vh_name_vc'] . "'";
+                $bindArray = array(':vh_acc_fk' => $domain_info['vh_acc_fk'], ':vh_new_acc_fk' => $uid); 
+              	$zdbh->bindQuery($sql, $bindArray);
 
                 $sub_domains = array();
                 if (count($rows) > 0) {					
                     foreach($rows as $row_idx=>$row_sub_domain) {
 						array_push($sub_domains, array('vh_directory_vc' => $row_sub_domain['vh_directory_vc'],
-														'vh_id_pk' => $row_sub_domain['vh_id_pk']));
+							'vh_acc_fk' => $row_sub_domain['vh_acc_fk'],
+							'vh_id_pk' => $row_sub_domain['vh_id_pk'], 'vh_name_vc' => $row_sub_domain['vh_name_vc']));
 					}
 				}
 
@@ -322,6 +299,10 @@ class module_controller {
 							$current_sub_domain_path = ctrl_options::GetSystemOption('hosted_dir') . $domain_user_info['username'] . "/public_html".$sub_domain['vh_directory_vc'];
 							$new_sub_domain_path = ctrl_options::GetSystemOption('hosted_dir') . $transfer_user_info['username'] . "/public_html".$sub_domain['vh_directory_vc'];
 							
+                // ship emails as well
+                $sql = "UPDATE x_mailboxes SET mb_acc_fk=:vh_new_acc_fk WHERE mb_acc_fk=:vh_acc_fk AND mb_address_vc LIKE '%" . $sub_domain['vh_name_vc'] . "'";
+                $bindArray = array(':vh_acc_fk' => $sub_domain['vh_acc_fk'], ':vh_new_acc_fk' => $uid);
+                $zdbh->bindQuery($sql, $bindArray);
 							if(is_dir($current_sub_domain_path)){
 								// move directory
 								@exec('mv "'.$current_sub_domain_path.'" "'.$new_sub_domain_path.'"'); 
