@@ -36,18 +36,14 @@ class module_controller {
 		$users_id_s = $uid;
 		
 		// in order to fetch domains related to this user, we need to also fetch all users belonging to this user (sub users)
-		//$currentuser = ctrl_users::GetUserDetail();
 		$users_id_sub = self::subUsers($uid);
 		if($users_id_sub){
 		   $users_id_s .= ','.$users_id_sub;
 		}
 
-        //if ($currentuser['usergroupid'] == 1) {
-            $sql = "SELECT vh_acc_fk,vh_name_vc,vh_id_pk FROM x_vhosts WHERE find_in_set(vh_acc_fk, :user_ids) 
-            		AND vh_deleted_ts IS NULL AND vh_type_in=1 ORDER BY vh_name_vc ASC";
-        //} else {
-          //  $sql = "SELECT * FROM x_vhosts WHERE vh_acc_fk=" . $uid . " AND vh_deleted_ts IS NULL AND vh_type_in=1 ORDER BY vh_name_vc ASC";
-        //}
+        $sql = "SELECT vh_acc_fk,vh_name_vc,vh_id_pk FROM x_vhosts WHERE find_in_set(vh_acc_fk, :user_ids) 
+        		AND vh_deleted_ts IS NULL AND vh_type_in=1 ORDER BY vh_name_vc ASC";
+
         $bindArray = array(':user_ids' => $users_id_s);                                        
         $zdbh->bindQuery($sql, $bindArray);
         $rows = $zdbh->returnRows(); 
@@ -70,7 +66,6 @@ class module_controller {
     static function ListClients($uid=0) {
         global $zdbh;
 
-		//$currentuser = ctrl_users::GetUserDetail();
         $sql = "SELECT ac_id_pk,ac_user_vc FROM x_accounts WHERE (ac_reseller_fk=:user_id OR ac_id_pk=:user_id) AND ac_deleted_ts IS NULL";
         $bindArray = array(':user_id' => $uid);                                        
         $zdbh->bindQuery($sql, $bindArray);
@@ -104,10 +99,12 @@ class module_controller {
             foreach($rows as $row_idx=>$row) {
 				if($row['ac_id_pk']){				
 					$users_id_s .= $row['ac_id_pk'].',';
-					/* un-commenting the line below(96) will allow listing of domains owned by a 
-					   sub-account of the current $row_users['ac_id_pk']
-					   Although, i don't think these domains should be visible to the logged in 
-						user unless they directly belong to one of his/her sub-accounts */
+					/* 
+                        Un-commenting the line below(108) will allow listing of domains owned by a 
+				        sub-account of the current $row_users['ac_id_pk']
+				        IMO, I don't think these domains should be visible to the logged in 
+						user unless they directly belong to one of his/her sub-accounts 
+                    */
 					//$users_id_s .= self::subUsers($row_users['ac_id_pk']).',';
 				}
             }
@@ -123,7 +120,6 @@ class module_controller {
 	
 
     static function CheckTransferForErrors($uid,$domain_id) {
-        //global $zdbh;
         // validate user id and domain id before we proceed...
         if ($uid == '' || $uid == 0 || !is_numeric($uid)) {
             self::$nouser = true;
@@ -137,8 +133,6 @@ class module_controller {
  
         return true;
     }
-	
-
     /**
      * End 'worker' methods.
      */
@@ -234,8 +228,9 @@ class module_controller {
                 $zdbh->bindQuery($sql, $bindArray);
                 $rows = $zdbh->returnRows(); 
 
-		// ship emails as well
-		$sql = "UPDATE x_mailboxes SET mb_acc_fk=:vh_new_acc_fk WHERE mb_acc_fk=:vh_acc_fk AND mb_address_vc LIKE '%" . $domain_info['vh_name_vc'] . "'";
+        		// ship emails as well
+        		$sql = "UPDATE x_mailboxes SET mb_acc_fk=:vh_new_acc_fk WHERE mb_acc_fk=:vh_acc_fk 
+                        AND mb_address_vc LIKE '%" . $domain_info['vh_name_vc'] . "'";
                 $bindArray = array(':vh_acc_fk' => $domain_info['vh_acc_fk'], ':vh_new_acc_fk' => $uid); 
               	$zdbh->bindQuery($sql, $bindArray);
 
@@ -299,10 +294,12 @@ class module_controller {
 							$current_sub_domain_path = ctrl_options::GetSystemOption('hosted_dir') . $domain_user_info['username'] . "/public_html".$sub_domain['vh_directory_vc'];
 							$new_sub_domain_path = ctrl_options::GetSystemOption('hosted_dir') . $transfer_user_info['username'] . "/public_html".$sub_domain['vh_directory_vc'];
 							
-                // ship emails as well
-                $sql = "UPDATE x_mailboxes SET mb_acc_fk=:vh_new_acc_fk WHERE mb_acc_fk=:vh_acc_fk AND mb_address_vc LIKE '%" . $sub_domain['vh_name_vc'] . "'";
-                $bindArray = array(':vh_acc_fk' => $sub_domain['vh_acc_fk'], ':vh_new_acc_fk' => $uid);
-                $zdbh->bindQuery($sql, $bindArray);
+                            // ship emails as well
+                            $sql = "UPDATE x_mailboxes SET mb_acc_fk=:vh_new_acc_fk WHERE mb_acc_fk=:vh_acc_fk 
+                                    AND mb_address_vc LIKE '%" . $sub_domain['vh_name_vc'] . "'";
+                            $bindArray = array(':vh_acc_fk' => $sub_domain['vh_acc_fk'], ':vh_new_acc_fk' => $uid);
+                            $zdbh->bindQuery($sql, $bindArray);
+
 							if(is_dir($current_sub_domain_path)){
 								// move directory
 								@exec('mv "'.$current_sub_domain_path.'" "'.$new_sub_domain_path.'"'); 
@@ -441,8 +438,6 @@ class module_controller {
         }
         return;		
 	}
-
-
 
     static function getResult() {
         if (!fs_director::CheckForEmptyValue(self::$nouser)) {
