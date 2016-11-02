@@ -1,4 +1,4 @@
-Transfer Domain v1.1.5
+Transfer Domain v1.2.0
 This module enables you to transfer domains from one Sentora client to another
 
 
